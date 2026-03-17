@@ -185,26 +185,29 @@ loadQuestion()
 
 }
 
-async function vote(i,type){
+function vote(i, type){
 
-await fetch("/vote",{
+let data = JSON.parse(localStorage.getItem("questions") || "[]");
 
-method:"POST",
+let q = data[id];
 
-headers:{'Content-Type':'application/json'},
+if(!q || !q.answers[i]) return;
 
-body:JSON.stringify({
+/* אם אין לייקים עדיין */
+q.answers[i].likes = q.answers[i].likes || 0;
+q.answers[i].dislikes = q.answers[i].dislikes || 0;
 
-questionId:id,
-answerId:i,
-type:type
+if(type === "like"){
+  q.answers[i].likes++;
+}else{
+  q.answers[i].dislikes++;
+}
 
-})
+/* שמירה */
+localStorage.setItem("questions", JSON.stringify(data));
 
-})
-
-loadQuestion()
-
+/* רענון */
+loadQuestion();
 }
 
 async function bestAnswer(i){
