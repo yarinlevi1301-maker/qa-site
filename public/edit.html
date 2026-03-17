@@ -83,28 +83,37 @@ document.getElementById("birthdate").value = data.birthdate
 
 }
 
-async function saveProfile(){
+function saveProfile(){
 
-let bio=document.getElementById("bio").value
-let birthdate=document.getElementById("birthdate").value
+let bio = document.getElementById("bio").value;
+let birthdate = document.getElementById("birthdate").value;
+let file = document.getElementById("avatarFile").files[0];
 
-let file=document.getElementById("avatarFile").files[0]
+let reader = new FileReader();
 
-let formData=new FormData()
+reader.onload = function(){
 
-formData.append("bio",bio)
-formData.append("birthdate",birthdate)
+let avatar = reader.result;
+
+let profile = JSON.parse(localStorage.getItem("profile") || "{}");
+
+profile.bio = bio;
+profile.birthdate = birthdate;
 
 if(file){
-formData.append("avatar",file)
+  profile.avatar = avatar;
 }
 
-await fetch("/editProfile",{
-method:"POST",
-body:formData
-})
+localStorage.setItem("profile", JSON.stringify(profile));
 
-document.getElementById("msg").innerText="נשמר בהצלחה"
+document.getElementById("msg").innerText = "נשמר בהצלחה";
+};
+
+if(file){
+  reader.readAsDataURL(file);
+}else{
+  reader.onload();
+}
 
 }
 
