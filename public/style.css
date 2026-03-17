@@ -1368,3 +1368,87 @@ h1{
 .starBtn:hover{
     color: gold;
 }
+/* בסיס */
+.vote-box {
+  display: flex;
+  justify-content: center;
+  gap: 14px;
+  margin-top: 12px;
+}
+
+.vote-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 999px;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  background: rgba(255,255,255,0.05);
+  color: #ddd;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(6px);
+}
+
+/* אייקונים */
+.vote-btn i {
+  width: 16px;
+  height: 16px;
+  display: inline-block;
+  position: relative;
+}
+
+/* LIKE (חץ למעלה) */
+.like-icon::before {
+  content: "";
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  border-left: 2px solid #aaa;
+  border-top: 2px solid #aaa;
+  transform: rotate(45deg);
+  top: 4px;
+  left: 4px;
+}
+
+/* DISLIKE (חץ למטה) */
+.dislike-icon::before {
+  content: "";
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  border-left: 2px solid #aaa;
+  border-bottom: 2px solid #aaa;
+  transform: rotate(-45deg);
+  top: 2px;
+  left: 4px;
+}
+
+/* STAR */
+.star-icon::before {
+  content: "★";
+  font-size: 14px;
+  color: #aaa;
+}
+
+/* HOVER אפקטים */
+.vote-btn.like:hover {
+  background: rgba(76, 175, 80, 0.2);
+  color: #4CAF50;
+}
+
+.vote-btn.dislike:hover {
+  background: rgba(255, 77, 77, 0.2);
+  color: #ff4d4d;
+}
+
+.vote-btn.best:hover {
+  background: rgba(255, 215, 0, 0.2);
+  color: gold;
+}
+
+/* לחיצה */
+.vote-btn:active {
+  transform: scale(0.92);
+}
