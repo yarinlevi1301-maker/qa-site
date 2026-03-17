@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<title>התחברות</title>
+<link rel="stylesheet" href="style.css">
+
+</head>
+
+<body>
+
+<div class="container">
+<div class="backButton" onclick="goBack()">⬅ חזור לבית</div>
+
+<h1>התחברות</h1>
+
+<input id="username" placeholder="שם משתמש" onkeypress="checkEnter(event)">
+
+<br><br>
+
+<input id="password" type="password" placeholder="סיסמה" onkeypress="checkEnter(event)">
+
+<br><br>
+
+<button onclick="login()">התחבר</button>
+
+</div>
+
+<script>
+
+async function login(){
+
+let username=document.getElementById("username").value
+let password=document.getElementById("password").value
+
+let res=await fetch("/login",{
+method:"POST",
+headers:{
+"Content-Type":"application/json"
+},
+body:JSON.stringify({
+username:username,
+password:password
+})
+})
+
+let data=await res.json()
+
+if(data.success){
+
+window.location.href="/"
+
+}else{
+
+alert("שם משתמש או סיסמה לא נכונים")
+
+}
+
+}
+
+function checkEnter(e){
+
+if(e.key==="Enter"){
+login()
+}
+
+}
+
+</script>
+
+</body>
+
+</html>

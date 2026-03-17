@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<title>שאלה</title>
+
+<link rel="stylesheet" href="style.css">
+
+</head>
+
+<body>
+
+<header class="navbar">
+
+<div class="logo">Q&A</div>
+
+<div class="backButton" onclick="goBack()">⬅ חזור לבית</div>
+<a class="navLink" href="all.html">כל השאלות</a>
+
+</header>
+
+<div class="container">
+
+<div class="questionActions" style="margin-bottom:10px;">
+    <button class="editBtn" onclick="editQuestion()">✏ ערוך</button>
+    <button class="deleteBtn" onclick="deleteQuestion()">🗑 מחק</button>
+</div>
+<h2 id="questionText"></h2>
+<button onclick="goToAnswer()" class="writeAnswerBtn">
+<span class="writeAnswerIcon">💬</span>
+כתוב תשובה
+</button>
+
+
+<h3 id="answersTitle">תשובות</h3>
+
+<div id="answers"></div>
+
+<div id="answerBox" style="margin-top:25px; display:flex; gap:10px; align-items:center;">
+    <input id="answerInput" placeholder="כתוב תשובה..." onkeypress="handleEnter(event)">
+    <button id="sendAnswerBtn" onclick="sendAnswer()">שלח</button>
+</div>
+
+<script>
+
+function editQuestion() {
+    // הולך לדף העריכה של השאלה הנוכחית
+    let params = new URLSearchParams(location.search);
+    let id = params.get("id"); 
+    window.location.href = `/editQuestion.html?id=${id}`;
+}
+
+function deleteQuestion() {
+    let params = new URLSearchParams(location.search);
+    let id = params.get("id");
+
+    if (!confirm("בטוח שאתה רוצה למחוק את השאלה הזו?")) return;
+
+    // מוחק את השאלה מ-localStorage
+    let data = JSON.parse(localStorage.getItem("questions") || "[]");
+    data.splice(parseInt(id), 1);
+    localStorage.setItem("questions", JSON.stringify(data));
+
+    // מחזיר לדף כל השאלות
+    window.location.href = "/all.html";
+}
+
+function timeAgo(time){
+
+let seconds = Math.floor((Date.now() - time) / 1000)
+
+let minutes = Math.floor(seconds / 60)
+let hours = Math.floor(seconds / 3600)
+let days = Math.floor(seconds / 86400)
+
+if(seconds < 60) return "עכשיו"
+if(minutes < 60) return "לפני " + minutes + " דקות"
+if(hours < 24) return "לפני " + hours + " שעות"
+return "לפני " + days + " ימים"
+
+}
+
+let params = new URLSearchParams(location.search)
+let id = params.get("id")
+
+async function loadQuestion(){
+    // קודם טען את כל השאלות מ-localStorage
+    let data = JSON.parse(localStorage.getItem("questions") || "[]");
+
+    // אם אין ב-localStorage, טען מהשרת
+    if(data.length === 0){
+        try {
+            let res = await fetch("/questions");
+            data = await res.json();
+            localStorage.setItem("questions", JSON.stringify(data));
+        } catch(e){
+            console.error("לא ניתן לטעון שאלות מהשרת", e);
+            return;
+        }
+    }
+
+// טעינת השאלה מהשרת במקום localStorage
+async function loadQuestionFromServer() {
+    try {
+        const res = await fetch("/questions");
+        const data = await res.json();
+        const q = data[parseInt(id)];
+        if(!q){
+            document.getElementById("questionText").innerText = "השאלה לא נמצאה";
+            return;
+        }
+
+        // עדכון כותרת השאלה מהשרת
+        document.getElementById("questionText").innerText = q.text;
+
+        // עדכון כותרת התשובות
+        let count = q.answers.length;
+        let title = document.getElementById("answersTitle");
+        if(count === 0){
+            title.innerText = "אין תשובות עדיין";
+        } else if(count === 1){
+            title.innerText = "תשובה אחת";
+        } else{
+            title.innerText = count + " תשובות";
+        }
+
+        // הצגת התשובות – נשארת כמו הקוד הקיים שלך
+        let answersDiv = document.getElementById("answers");
+        answersDiv.innerHTML = "";
+        // כאן תוכל להשאיר את הלולאה שלך שמציגה את התשובות כפי שהיא
+
+    } catch(e){
+        console.error("לא ניתן לטעון שאלות מהשרת", e);
+        document.getElementById("questionText").innerText = "שגיאה בטעינת השאלה";
+    }
+}
+
+// קריאה לפונקציה במקום הקוד הישן
+loadQuestionFromServer();
+
+    // עדכון כותרת התשובות
+    let count = q.answers.length;
+    let title = document.getElementById("answersTitle");
+
+    if(count === 0){
+        title.innerText = "אין תשובות עדיין";
+    } else if(count === 1){
+        title.innerText = "תשובה אחת";
+    } else{
+        title.innerText = count + " תשובות";
+    }
+
+    // הצגת התשובות – כל הקוד שלך נשאר כמו שהיה
+    let answersDiv = document.getElementById("answers");
+    answersDiv.innerHTML = "";
+
+    q.answers.map((a,i)=>({a,i})).sort((x,y)=>{
+        if(q.best === x.i) return -1;
+        if(q.best === y.i) return 1;
+        return 0;
+    }).forEach(({a,i})=>{
+        let div=document.createElement("div");
+        div.className = q.best === i ? "answerCard bestAnswer" : "answerCard";
+        div.innerHTML=`
+        <div class="answerHeader">
+            <div class="answerAvatar">
+                ${a.avatar ? `<img class="avatarImg" src="${a.avatar}">` : `<div class="avatarLetter">${a.user ? a.user.charAt(0).toUpperCase() : "A"}</div>`}
+            </div>
+            <div class="answerUser">
+                ${a.user ? a.user : "אנונימי"} • ${timeAgo(a.time)}
+            </div>
+        </div>
+        <div class="answerText">
+            ${q.best === i ? "<div class='bestLabel'>⭐ BEST ANSWER</div>" : ""}
+            ${a.text}
+        </div>
+<div class="answerActions">
+
+<button class="voteBtn" onclick="vote(${i},'like')">
+
+<svg viewBox="0 0 24 24" width="18" height="18">
+<path fill="currentColor" d="M2 21h4V9H2v12zm20-11c0-1.1-.9-2-2-2h-6l.95-4.57.03-.32
+c0-.41-.17-.79-.44-1.06L13 1 6.59 7.41C6.22 7.78 6 8.3 6 8.83V19
+c0 1.1.9 2 2 2h8c.82 0 1.54-.5 1.84-1.22l3-7
+c.1-.23.16-.47.16-.72v-2z"/>
+</svg>
+
+<span>${a.likes}</span>
+
+</button>
+
+
+<button class="voteBtn" onclick="vote(${i},'dislike')">
+
+<svg viewBox="0 0 24 24" width="18" height="18">
+<path fill="currentColor" d="M22 3h-4v12h4V3zM2 14c0 1.1.9 2 2 2h6l-.95
+4.57-.03.32c0 .41.17.79.44 1.06L11 23l6.41-6.41
+c.37-.37.59-.89.59-1.42V5
+c0-1.1-.9-2-2-2H8c-.82 0-1.54.5-1.84
+1.22l-3 7c-.1.23-.16.47-.16.72v2z"/>
+</svg>
+
+<span>${a.dislikes}</span>
+
+</button>
+
+
+<button class="voteBtn starBtn" onclick="bestAnswer(${i})">
+
+<svg viewBox="0 0 24 24" width="18" height="18">
+<path fill="currentColor" d="M12 17.27L18.18 21
+16.54 13.97
+22 9.24
+14.81 8.63
+12 2
+9.19 8.63
+2 9.24
+7.46 13.97
+5.82 21z"/>
+</svg>
+
+</button>
+
+</div>
+        `;
+        answersDiv.appendChild(div);
+    });
+}
+
+// משתנים גלובליים
+let currentUser = "אנונימי";
+let currentAvatar = "";
+
+// טען את המשתמש המחובר פעם אחת כשדף נטען
+async function loadCurrentUser() {
+    try {
+        const res = await fetch("/me");
+        const data = await res.json();
+        if (data.user) {
+            currentUser = data.user;
+            currentAvatar = data.avatar || "";
+        }
+    } catch (e) {
+        console.error("לא ניתן לשלוף את המשתמש המחובר", e);
+    }
+}
+
+// קרא לפונקציה הזו כשהדף נטען
+loadCurrentUser();
+
+// הפונקציה החדשה לשליחת תשובה
+async function sendAnswer() {
+    let input = document.getElementById("answerInput");
+    let answer = input.value.trim();
+    if (!answer) return; // אם ריק, לא מוסיף
+
+    // קבל את id השאלה
+    let params = new URLSearchParams(window.location.search);
+    let id = params.get("id");
+    if (!id) { alert("לא ניתן למצוא את השאלה"); return; }
+
+    // הוסף את התשובה ל-localStorage
+// טוען את השאלה מהשרת
+const res = await fetch("/questions");
+let data = await res.json();
+let qid = parseInt(id);
+if (!data[qid]) data[qid] = { text: "שאלה לא ידועה", answers: [], best: null };
+if (!data[qid].answers) data[qid].answers = [];
+
+    // תשובה חדשה עם שם ותמונה
+    data[qid].answers.push({
+        text: answer,
+        user: currentUser,
+        avatar: currentAvatar,
+        time: Date.now(),
+        likes: 0,
+        dislikes: 0
+    });
+
+    localStorage.setItem("questions", JSON.stringify(data));
+
+    // שליחה לשרת (אם קיים)
+    try {
+        await fetch("/answer", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ id: id, answer: answer })
+        });
+    } catch(e) {
+        console.warn("השרת לא זמין, התשובה נשמרה ב-localStorage בלבד");
+    }
+
+    input.value = "";  // רוקן את התיבה
+    loadQuestion();    // רענון התשובות כדי שתופיע מיד
+}
+
+async function vote(i, type) {
+    let data = JSON.parse(localStorage.getItem("questions") || "[]");
+    let qid = parseInt(id);
+    let q = data[qid];
+    if (!q || !q.answers[i]) return;
+
+    // מבנה לזכור הצבעות משתמש: { "questionId_answerId": "like"/"dislike" }
+    let votes = JSON.parse(localStorage.getItem("votes") || "{}");
+    let key = `${qid}_${i}`;
+
+    // אם המשתמש הצביע בעבר על תשובה זו
+    let prev = votes[key];
+
+    if(prev === type){
+        // אם הוא לוחץ על אותו סוג הצבעה שוב – הסרת ההצבעה
+        if(type === 'like') q.answers[i].likes--;
+        else if(type === 'dislike') q.answers[i].dislikes--;
+        delete votes[key];
+    } else {
+        // הסרה של ההצבעה הקודמת אם קיימת
+        if(prev === 'like') q.answers[i].likes--;
+        else if(prev === 'dislike') q.answers[i].dislikes--;
+
+        // הוספה של ההצבעה הנוכחית
+        if(type === 'like') q.answers[i].likes = (q.answers[i].likes || 0) + 1;
+        else if(type === 'dislike') q.answers[i].dislikes = (q.answers[i].dislikes || 0) + 1;
+
+        votes[key] = type;
+    }
+
+    // שמירה ב-localStorage
+    localStorage.setItem("votes", JSON.stringify(votes));
+    localStorage.setItem("questions", JSON.stringify(data));
+
+    loadQuestion(); // רענון התשובות
+
+    // עדכון מצב הכפתורים – active + אנימציה
+    setTimeout(() => {
+        document.querySelectorAll(".answerCard").forEach((card, index) => {
+            let likeBtn = card.querySelector(".voteBtn:nth-child(1)");
+            let dislikeBtn = card.querySelector(".voteBtn:nth-child(2)");
+            let keyCheck = `${qid}_${index}`;
+            let voteType = votes[keyCheck];
+
+            if(voteType === 'like') {
+                likeBtn.classList.add("active");
+                likeBtn.classList.add("bounce"); // אנימציה קצרה
+            } else likeBtn.classList.remove("active");
+
+            if(voteType === 'dislike') {
+                dislikeBtn.classList.add("active");
+                dislikeBtn.classList.add("bounce"); // אנימציה קצרה
+            } else dislikeBtn.classList.remove("active");
+        });
+
+        // הסרת אנימציה אחרי סיום
+        setTimeout(() => {
+            document.querySelectorAll(".voteBtn").forEach(btn => btn.classList.remove("bounce"));
+        }, 300); // חצי שניה
+    }, 50);
+
+    // שליחה לשרת אם קיים
+    try {
+        await fetch("/vote", {
+            method: "POST",
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                questionId: id,
+                answerId: i,
+                type: type
+            })
+        });
+    } catch(e) {
+        console.warn("השרת לא זמין, ההצבעה נשמרה ב-localStorage בלבד");
+    }
+}
+
+async function bestAnswer(i) {
+    let data = JSON.parse(localStorage.getItem("questions") || "[]");
+    let qid = parseInt(id);
+    let q = data[qid];
+    if (!q || !q.answers[i]) return;
+
+    // עדכון ה-BEST באופן מקומי
+    q.best = i;
+    localStorage.setItem("questions", JSON.stringify(data));
+
+    // רענון התצוגה מיידית
+    loadQuestion();
+
+    // ניסיון לשלוח לשרת אם קיים
+    try {
+        await fetch("/bestAnswer", {
+            method: "POST",
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                questionId: id,
+                answerId: i
+            })
+        });
+    } catch(e) {
+        console.warn("השרת לא זמין, ה-BEST נשמר ב-localStorage בלבד");
+    }
+}
+
+/* הפונקציה החדשה לכפתור */
+
+function goToAnswer(){
+
+document.getElementById("answerBox").scrollIntoView({
+behavior:"smooth"
+})
+
+document.getElementById("answerInput").focus()
+
+}
+
+function handleEnter(e){
+
+if(e.key==="Enter"){
+
+sendAnswer()
+
+}
+
+}
+
+loadQuestion()
+
+</script>
+<script>
+function goBack() {
+    window.location.href = "/"; // מחזיר לדף הבית
+}
+</script>
+</body>
+
+</html>

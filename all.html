@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="he">
+<head>
+<meta charset="UTF-8">
+<title>כל השאלות</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="bokeh"></div>
+
+<header class="navbar">
+  <div class="logo">Q&A</div>
+  <div class="backButton" onclick="goBack()">⬅ חזור לבית</div>
+  <a class="navLink" href="ask.html">שאל שאלה</a>
+</header>
+
+<div class="container">
+<h1>כל השאלות</h1>
+<input id="searchInput" placeholder="חפש שאלה..." oninput="searchQuestions()">
+<div id="questions" class="questionsList"></div>
+</div>
+
+<script>
+let currentUser = "";
+
+// שליפת המשתמש המחובר
+async function loadCurrentUser() {
+    try {
+        const res = await fetch("/me");
+        const data = await res.json();
+        if(data.user) currentUser = data.user;
+    } catch(e) { console.error("לא הצליח לשלוף את המשתמש המחובר", e); }
+}
+
+// טעינת שאלות מהשרת בלבד
+async function loadQuestions(){
+    try {
+        const res = await fetch("/questions", { cache: "no-store" });
+        const data = await res.json();
+
+        const div = document.getElementById("questions");
+        div.innerHTML = ""; // מנקה את כל הכרטיסים הקודמים
+
+        data.forEach((q,i)=>{
+            let card = document.createElement("div");
+            card.className = "questionCard";
+
+            card.onclick = ()=>{ location.href = "/question.html?id=" + i; }
+
+            card.innerHTML = `
+                <div class="questionHeader">
+                    <div class="questionAvatar">
+                        ${q.avatar ? `<img src="${q.avatar}">` : `<div class="avatarLetter">${q.user ? q.user.charAt(0).toUpperCase() : "A"}</div>`}
+                    </div>
+                    <div class="questionUser">${q.user}</div>
+                </div>
+                <div class="questionTitle">${q.text}</div> <!-- הטקסט המעודכן מהשרת -->
+                <div class="questionMeta">
+                    <span>${q.answers.length} תשובות</span>
+                    <span>${q.views} צפיות</span>
+                </div>
+                <div class="questionActions">
+                    ${currentUser ? `<button class="editBtn" onclick="editQuestion(event, ${i})">✏ ערוך</button>` : ""}
+                    ${currentUser ? `<button class="deleteBtn" onclick="deleteQuestion(event, ${i})">🗑 מחק</button>` : ""}
+                </div>
+            `;
+            div.appendChild(card);
+        });
+
+    } catch(e){
+        console.error("לא ניתן לטעון שאלות מהשרת", e);
+    }
+}
+
+// מחיקת שאלה
+async function deleteQuestion(e, qid){
+    e.stopPropagation();
+    if(!confirm("בטוח שאתה רוצה למחוק את השאלה הזו?")) return;
+
+    try {
+        await fetch("/deleteQuestion", {
+            method:"POST",
+            headers:{"Content-Type":"application/json"},
+            body:JSON.stringify({id: qid})
+        });
+        loadQuestions(); // רענון הכרטיסים לאחר מחיקה
+    } catch(e){
+        console.error("לא ניתן למחוק את השאלה", e);
+    }
+}
+
+// עריכת שאלה
+function editQuestion(e, qid){
+    e.stopPropagation();
+    window.location.href = `/editQuestion.html?id=${qid}`;
+}
+
+// חיפוש שאלות
+function searchQuestions(){
+    let text = document.getElementById("searchInput").value.toLowerCase();
+    let cards = document.querySelectorAll(".questionCard");
+    cards.forEach(card=>{
+        let title = card.querySelector(".questionTitle").innerText.toLowerCase();
+        card.style.display = title.includes(text) ? "block" : "none";
+    });
+}
+
+// אתחול
+async function init(){
+    await loadCurrentUser();
+    loadQuestions();
+}
+
+init();
+
+// חזרה לדף הבית
+function goBack() {
+    window.location.href = "/";
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<meta charset="UTF-8">
+<title>פרופיל</title>
+
+<link rel="stylesheet" href="style.css">
+
+</head>
+
+<body>
+
+<header class="navbar">
+
+  <!-- כפתור חזור לבית בצד שמאל -->
+  <div id="backButtonProfile" onclick="goBack()">⬅ חזור לבית</div>
+
+  <div class="navLeft">
+    <div class="logo">Q&A</div>
+  </div>
+
+  <!-- אזור הפרופיל בצד ימין -->
+  <div id="userArea"></div>
+
+</header>
+
+<div class="container">
+
+<img id="avatarImg" class="profileAvatar">
+
+<h1 id="username"></h1>
+
+<p id="age"></p>
+
+<h2>קיר הודעות</h2>
+
+<input id="wallText" placeholder="כתוב הודעה">
+
+<button onclick="sendWall()">שלח</button>
+
+<div id="wall"></div>
+
+</div>
+
+<script>
+
+let currentUser=""
+
+async function loadProfile(){
+
+let resUser = await fetch("/me")
+let data = await resUser.json()
+
+currentUser=data.user
+
+document.getElementById("username").innerText=currentUser
+
+if(data.avatar){
+document.getElementById("avatarImg").src = data.avatar
+}
+
+if(data.birthdate){
+
+let age = calculateAge(data.birthdate)
+
+document.getElementById("age").innerText="🎂 גיל: "+age
+
+}
+
+loadWall()
+
+}
+
+function calculateAge(birthdate){
+
+let today = new Date()
+
+let birth = new Date(birthdate)
+
+let age = today.getFullYear() - birth.getFullYear()
+
+let m = today.getMonth() - birth.getMonth()
+
+if(m < 0 || (m === 0 && today.getDate() < birth.getDate())){
+age--
+}
+
+return age
+
+}
+
+async function loadWall(){
+
+let res = await fetch("/wall/"+currentUser)
+let messages = await res.json()
+
+let wall=document.getElementById("wall")
+
+wall.innerHTML=""
+
+messages.forEach(m=>{
+
+let div=document.createElement("div")
+
+div.className="answerCard"
+
+div.innerHTML=`
+<b>${m.from}</b>: ${m.text}
+`
+
+wall.appendChild(div)
+
+})
+
+}
+
+async function sendWall(){
+
+let text=document.getElementById("wallText").value
+
+await fetch("/wall",{
+
+method:"POST",
+
+headers:{
+"Content-Type":"application/json"
+},
+
+body:JSON.stringify({
+user:currentUser,
+text:text
+})
+
+})
+
+document.getElementById("wallText").value=""
+
+loadWall()
+
+}
+
+async function checkUser(){
+
+let res = await fetch("/me")
+let data = await res.json()
+
+let area = document.getElementById("userArea")
+
+if(data.user){
+
+area.innerHTML = `
+<div class="profileMenu">
+
+<div class="profileButton" onclick="toggleMenu()">
+
+<div class="avatar">
+${data.user.charAt(0).toUpperCase()}
+</div>
+
+<div class="username">
+${data.user}
+</div>
+
+</div>
+
+<div class="dropdown" id="dropdown">
+
+<a href="profile.html">הפרופיל שלי</a>
+
+<a href="edit.html">ערוך פרופיל</a>
+
+<a href="#" onclick="logout()">התנתק</a>
+
+</div>
+
+</div>
+`
+
+}
+
+}
+
+function toggleMenu(){
+
+let menu=document.getElementById("dropdown")
+
+if(menu.style.display==="flex"){
+menu.style.display="none"
+}else{
+menu.style.display="flex"
+}
+
+}
+
+async function logout(){
+
+await fetch("/logout")
+
+location.reload()
+
+}
+
+loadProfile()
+checkUser()
+
+</script>
+<script>
+function goBack() {
+    window.location.href = "/"; // מחזיר לדף הבית
+}
+</script>
+</body>
+</html>

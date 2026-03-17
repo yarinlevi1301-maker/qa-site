@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+<title>הרשמה</title>
+<link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<div class="container">
+<div class="backButton" onclick="goBack()">⬅ חזור לבית</div>
+
+<h1>הרשמה</h1>
+
+<input id="username" placeholder="שם משתמש">
+
+<br><br>
+
+<input id="password" type="password" placeholder="סיסמה">
+
+<br><br>
+
+<button onclick="register()">הירשם</button>
+
+</div>
+
+<script>
+
+async function register(){
+
+let username=document.getElementById("username").value
+let password=document.getElementById("password").value
+
+await fetch("/register",{
+method:"POST",
+headers:{
+"Content-Type":"application/json"
+},
+body:JSON.stringify({username,password})
+})
+
+location.href="/"
+
+}
+
+</script>
+
+</body>
+
+</html>

@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<meta charset="UTF-8">
+<title>ערוך פרופיל</title>
+
+<link rel="stylesheet" href="style.css">
+
+</head>
+
+<body>
+
+<header class="navbar">
+
+<div class="navLeft">
+
+<div class="logo">Q&A</div>
+
+<div class="backButton" onclick="goBack()">⬅ חזור לבית</div>
+<a class="navLink" href="all.html">כל השאלות</a>
+
+</div>
+
+</header>
+
+<div class="container">
+
+<div class="backButton" onclick="goBack()">
+⬅ חזרה לפרופיל
+</div>
+
+<h1>עריכת פרופיל</h1>
+
+<div class="profilePreview">
+<img id="currentAvatar">
+</div>
+
+<br>
+
+<input id="bio" placeholder="ביוגרפיה">
+<br><br>
+
+<input type="file" id="avatarFile">
+<br><br>
+
+<input id="avatar" placeholder="קישור לתמונת פרופיל">
+
+<br><br>
+
+<input type="date" id="birthdate">
+
+<br><br>
+
+<button class="deleteBtn" onclick="deleteAvatar()">מחק תמונת פרופיל</button>
+<br><br>
+
+<button onclick="saveProfile()">שמור</button>
+
+<p id="msg"></p>
+
+</div>
+
+<script>
+
+async function loadProfile(){
+
+let res = await fetch("/me")
+let data = await res.json()
+
+if(data.avatar){
+document.getElementById("currentAvatar").src = data.avatar
+}
+
+if(data.bio){
+document.getElementById("bio").value = data.bio
+}
+
+if(data.birthdate){
+document.getElementById("birthdate").value = data.birthdate
+}
+
+}
+
+async function saveProfile(){
+
+let bio=document.getElementById("bio").value
+let birthdate=document.getElementById("birthdate").value
+
+let file=document.getElementById("avatarFile").files[0]
+
+let formData=new FormData()
+
+formData.append("bio",bio)
+formData.append("birthdate",birthdate)
+
+if(file){
+formData.append("avatar",file)
+}
+
+await fetch("/editProfile",{
+method:"POST",
+body:formData
+})
+
+document.getElementById("msg").innerText="נשמר בהצלחה"
+
+}
+
+function goBack(){
+
+window.location.href="/profile.html"
+
+}
+
+async function deleteAvatar(){
+
+await fetch("/deleteAvatar",{
+method:"POST"
+})
+
+document.getElementById("msg").innerText="התמונה נמחקה"
+
+setTimeout(()=>{
+location.reload()
+},500)
+
+}
+
+loadProfile()
+
+</script>
+<script>
+function goBack() {
+    window.location.href = "/"; // מחזיר לדף הבית
+}
+</script>
+</body>
+</html>

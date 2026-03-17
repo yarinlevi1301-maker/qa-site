@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="he">
+<head>
+<meta charset="UTF-8">
+<title>עריכת שאלה</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="navbar">
+  <div class="logo">Q&A</div>
+  <div class="backButton" onclick="goBack()">⬅ חזור לכל השאלות</div>
+</header>
+
+<div class="container">
+<h1>עריכת שאלה</h1>
+
+<div id="editContainer">
+  <p id="notAllowed" style="display:none;color:red;">רק היוצר של השאלה יכול לערוך אותה.</p>
+  <textarea id="questionText" rows="5" style="width:100%;"></textarea>
+  <button id="saveBtn">שמור שינויים</button>
+</div>
+</div>
+
+<script>
+let currentUser = "";
+
+async function loadCurrentUser() {
+    try {
+        const res = await fetch("/me");
+        const data = await res.json();
+        if(data.user) currentUser = data.user;
+    } catch(e) { console.error("לא הצליח לשלוף את המשתמש המחובר", e); }
+}
+
+function getQuestionId() {
+    const params = new URLSearchParams(window.location.search);
+    return params.get("id");
+}
+
+async function loadQuestion() {
+    const id = getQuestionId();
+
+    // ⚡ נטען מהשרת במקום מ-localStorage
+    let questions = [];
+    try {
+        const res = await fetch("/questions");
+        questions = await res.json();
+    } catch(e) {
+        console.error("לא ניתן לטעון שאלות מהשרת", e);
+        alert("שגיאה בטעינת השאלה");
+        return;
+    }
+
+    const q = questions[id];
+    if(!q){ alert("השאלה לא נמצאה"); return; }
+
+    const questionText = document.getElementById("questionText");
+    const notAllowed = document.getElementById("notAllowed");
+    const saveBtn = document.getElementById("saveBtn");
+
+    if(q.user && q.user.trim().toLowerCase() === currentUser.trim().toLowerCase()){
+        questionText.value = q.text;
+        questionText.disabled = false;
+        saveBtn.style.display = "inline-block";
+        notAllowed.style.display = "none";
+    } else {
+        questionText.value = q.text;
+        questionText.disabled = true;
+        saveBtn.style.display = "none";
+        notAllowed.style.display = "block";
+    }
+
+    saveBtn.onclick = async () => {
+        const newText = questionText.value.trim();
+        if(newText === "") { alert("השאלה לא יכולה להיות ריקה"); return; }
+
+        // ⚡ שמירה בשרת
+        try {
+            await fetch(`/questions/${id}`, {
+                method: "PUT",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify({text: newText})
+            });
+            alert("השאלה עודכנה בהצלחה!");
+            // ⚡ הפניה לדף השאלה כדי שהכותרת תתעדכן אצל כולם
+            window.location.href = `/question.html?id=${id}`;
+        } catch(e){
+            console.error("לא ניתן לעדכן את השאלה", e);
+            alert("שגיאה בעדכון השאלה");
+        }
+    }
+}
+
+function goBack() {
+    window.location.href = "/all.html";
+}
+
+async function init() {
+    await loadCurrentUser();
+    loadQuestion();
+}
+
+init();
+</script>
+</body>
+</html>

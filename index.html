@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>אתר שאלות</title>
+<link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+<div class="bokeh"></div>
+<header class="navbar">
+
+<div id="menuOverlay"></div>
+
+<div class="navLeft">
+
+<div class="logo">Q&A</div>
+
+<div class="menuButton" onclick="toggleMenu()">☰</div>
+
+</div>
+
+<div class="navRight">
+
+<div class="mainMenu" id="mainMenu">
+
+<a href="/">🏠 בית</a>
+<a href="ask.html">❓ שאל שאלה</a>
+<a href="all.html">📚 כל השאלות</a>
+<a href="profile.html">👤 הפרופיל שלי</a>
+<a href="edit.html">⚙️ ערוך פרופיל</a>
+
+</div>
+
+<div id="userArea"></div>
+
+</div>
+
+</header>
+
+<div class="container">
+
+<section class="hero">
+
+<h1>שאל כל דבר בעולם</h1>
+
+<p>קהילת שאלות ותשובות שבה כולם עוזרים לכולם</p>
+
+<a class="bigButton" href="ask.html">שאל שאלה עכשיו</a>
+
+</section>
+
+</div>
+
+<script>
+
+async function checkUser(){
+
+let res = await fetch("/me")
+let data = await res.json()
+
+let area = document.getElementById("userArea")
+
+if(data.user){
+
+area.innerHTML = `
+<div class="profileMenu">
+
+<div class="profileButton" onclick="toggleProfile()">
+
+${data.avatar ? 
+`<img class="menuAvatar" src="${data.avatar}">` : 
+`<div class="avatar">${data.user.charAt(0).toUpperCase()}</div>`
+}
+
+<div class="username">
+${data.user}
+</div>
+
+</div>
+
+<div class="dropdown" id="profileMenu">
+<a href="profile.html">הפרופיל שלי</a>
+<a href="edit.html">ערוך פרופיל</a>
+<a href="#" onclick="logout()">התנתק</a>
+</div>
+
+</div>
+`
+
+}else{
+
+area.innerHTML = `
+<div class="authButtons">
+<a class="authBtn" href="login.html">התחברות</a>
+<a class="authBtn" href="register.html">הרשמה</a>
+</div>
+`
+
+}
+
+}
+
+function toggleMenu(){
+
+let menu = document.getElementById("mainMenu")
+let overlay = document.getElementById("menuOverlay")
+
+if(menu.style.left === "0px"){
+
+menu.style.left = "-250px"
+overlay.style.opacity = "0"
+overlay.style.pointerEvents = "none"
+
+}else{
+
+menu.style.left = "0px"
+overlay.style.opacity = "1"
+overlay.style.pointerEvents = "auto"
+
+}
+
+}
+
+function toggleProfile(){
+
+let menu = document.getElementById("profileMenu")
+
+if(menu.style.display === "flex"){
+menu.style.display = "none"
+}else{
+menu.style.display = "flex"
+}
+
+}
+
+async function logout(){
+
+await fetch("/logout")
+location.reload()
+
+}
+
+checkUser()
+
+document.addEventListener("click", function(e){
+
+let menu = document.getElementById("mainMenu")
+let button = document.querySelector(".menuButton")
+let overlay = document.getElementById("menuOverlay")
+
+if(!menu.contains(e.target) && !button.contains(e.target)){
+menu.style.left = "-250px"
+overlay.style.opacity = "0"
+overlay.style.pointerEvents = "none"
+}
+
+})
+
+</script>
+<script>
+function goBack() {
+    window.location.href = "/"; // מחזיר לדף הבית
+}
+</script>
+</body>
+</html>

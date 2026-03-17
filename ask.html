@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+<title>שאל שאלה</title>
+<link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<header class="navbar">
+<div class="logo">Q&A</div>
+<div class="backButton" onclick="goBack()">⬅ חזור לבית</div>
+<a class="navLink" href="all.html">כל השאלות</a>
+</header>
+
+<div class="container">
+<h1>שאל שאלה</h1>
+
+<input id="questionInput" placeholder="כתוב שאלה..." onkeypress="handleEnter(event)">
+
+<button onclick="sendQuestion()">שלח שאלה</button>
+</div>
+
+<script>
+// המשתמש המחובר
+let currentUser = "";
+
+// שליפת המשתמש המחובר (אם יש)
+async function loadCurrentUser() {
+    try {
+        const res = await fetch("/me");
+        const data = await res.json();
+        if(data.user) currentUser = data.user;
+    } catch(e) {
+        console.error("לא הצליח לשלוף את המשתמש המחובר", e);
+    }
+}
+
+// שמירת השאלה ב-localStorage
+function saveQuestionToLocal(qText) {
+    let questions = JSON.parse(localStorage.getItem("questions") || "[]");
+    const newQ = {
+        user: currentUser || "אנונימי",
+        text: qText,
+        answers: [],
+        views: 0,
+        avatar: ""
+    };
+    questions.push(newQ);
+    localStorage.setItem("questions", JSON.stringify(questions));
+}
+
+async function sendQuestion(){
+    let q = document.getElementById("questionInput").value
+    if(!q) return
+
+    // שמירה בצד שרת (קיים)
+    await fetch("/questions",{
+        method:"POST",
+        headers:{
+            "Content-Type":"application/json"
+        },
+        body:JSON.stringify({ question:q })
+    })
+
+    // **תוספת – שמירה ב-localStorage**
+    saveQuestionToLocal(q);
+
+    location.href="all.html"
+}
+
+function handleEnter(e){
+    if(e.key === "Enter"){
+        sendQuestion()
+    }
+}
+
+function goBack() {
+    window.location.href = "/"; // מחזיר לדף הבית
+}
+
+// אתחול – טען את המשתמש המחובר
+loadCurrentUser();
+</script>
+</body>
+</html>

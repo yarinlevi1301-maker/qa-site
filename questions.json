@@ -1,0 +1,49 @@
+[
+  {
+    "text": "היושש",
+    "user": "admin1",
+    "answers": [
+      {
+        "text": "דד",
+        "user": "admin1",
+        "time": 1773712938473,
+        "likes": 0,
+        "dislikes": 0,
+        "votes": {}
+      },
+      {
+        "text": "גג",
+        "user": "admin1",
+        "time": 1773713335287,
+        "likes": 0,
+        "dislikes": 0,
+        "votes": {}
+      },
+      {
+        "text": "ככככ",
+        "user": "admin1",
+        "time": 1773713379114,
+        "likes": 0,
+        "dislikes": 0,
+        "votes": {}
+      },
+      {
+        "text": "אתם על הזין",
+        "user": "admin1",
+        "time": 1773713383343,
+        "likes": 0,
+        "dislikes": 0,
+        "votes": {}
+      }
+    ],
+    "time": 1773712610214,
+    "views": 0
+  },
+  {
+    "text": "ככככ",
+    "user": "admin1",
+    "answers": [],
+    "time": 1773713779885,
+    "views": 0
+  }
+]
