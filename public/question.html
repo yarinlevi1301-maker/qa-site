@@ -68,7 +68,8 @@ let id = params.get("id")
 
 async function loadQuestion(){
 
-let data = JSON.parse(localStorage.getItem("questions") || "[]");
+let res = await fetch("/questions");
+let data = await res.json();
 
 let q = data[id]
 
