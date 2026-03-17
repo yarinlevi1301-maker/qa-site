@@ -43,7 +43,15 @@
 </div>
 
 <script>
+async function sendAnswer() {
+  // תפעיל את מה שכבר יש לך לשליחה
+  // (אם יש fetch / שמירה)
 
+  setTimeout(() => {
+    location.reload();
+  }, 500);
+}
+    
 function editQuestion() {
     // הולך לדף העריכה של השאלה הנוכחית
     let params = new URLSearchParams(location.search);
